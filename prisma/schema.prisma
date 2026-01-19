@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  UserID        Int           @id @default(autoincrement())
+  UserName      String        @db.VarChar(250)
+  EmailAddress  String        @unique @db.VarChar(500)
+  Password      String        @db.VarChar(50)
+  MobileNo      String        @db.VarChar(50)
+  ProfileImage  String?       @db.VarChar(500)
+  Created       DateTime?     @default(now())
+  Modified      DateTime?     @updatedAt
+  categories    Category[]
+  expenses      Expense[]
+  incomes       Income[]
+  peoples       People[]
+  projects      Project[]
+  subCategories SubCategory[]
+
+  @@map("users")
+}
+
+model People {
+  PeopleID    Int       @id @default(autoincrement())
+  PeopleCode  String?   @db.VarChar(50)
+  Password    String?   @db.VarChar(50)
+  PeopleName  String    @db.VarChar(250)
+  Email       String?   @db.VarChar(150)
+  MobileNo    String?   @db.VarChar(50)
+  Description String?   @db.VarChar(500)
+  UserID      Int
+  Created     DateTime? @default(now())
+  Modified    DateTime? @updatedAt
+  IsActive    Boolean?  @default(true)
+  expenses    Expense[]
+  incomes     Income[]
+  user        User      @relation(fields: [UserID], references: [UserID], onDelete: Cascade)
+
+  @@index([UserID], map: "peoples_UserID_fkey")
+  @@map("peoples")
+}
+
+model Project {
+  ProjectID        Int       @id @default(autoincrement())
+  ProjectName      String    @db.VarChar(250)
+  ProjectLogo      String?   @db.VarChar(250)
+  ProjectStartDate DateTime?
+  ProjectEndDate   DateTime?
+  ProjectDetail    String?   @db.VarChar(500)
+  Description      String?   @db.VarChar(500)
+  UserID           Int
+  Created          DateTime? @default(now())
+  Modified         DateTime? @updatedAt
+  IsActive         Boolean?  @default(true)
+  expenses         Expense[]
+  incomes          Income[]
+  user             User      @relation(fields: [UserID], references: [UserID], onDelete: Cascade)
+
+  @@index([UserID], map: "projects_UserID_fkey")
+  @@map("projects")
+}
+
+model Category {
+  CategoryID    Int           @id @default(autoincrement())
+  CategoryName  String        @db.VarChar(250)
+  LogoPath      String?       @db.VarChar(250)
+  IsExpense     Boolean       @default(false)
+  IsIncome      Boolean       @default(false)
+  IsActive      Boolean       @default(true)
+  Description   String?       @db.VarChar(500)
+  UserID        Int
+  Created       DateTime?     @default(now())
+  Modified      DateTime?     @updatedAt
+  Sequence      Decimal?      @db.Decimal(10, 2)
+  user          User          @relation(fields: [UserID], references: [UserID], onDelete: Cascade)
+  expenses      Expense[]
+  incomes       Income[]
+  subCategories SubCategory[]
+
+  @@index([UserID], map: "categories_UserID_fkey")
+  @@map("categories")
+}
+
+model SubCategory {
+  SubCategoryID   Int       @id @default(autoincrement())
+  CategoryID      Int
+  SubCategoryName String    @db.VarChar(250)
+  LogoPath        String?   @db.VarChar(250)
+  IsExpense       Boolean   @default(false)
+  IsIncome        Boolean   @default(false)
+  IsActive        Boolean   @default(true)
+  Description     String?   @db.VarChar(500)
+  UserID          Int
+  Created         DateTime? @default(now())
+  Modified        DateTime? @updatedAt
+  Sequence        Decimal?  @db.Decimal(10, 2)
+  expenses        Expense[]
+  incomes         Income[]
+  category        Category  @relation(fields: [CategoryID], references: [CategoryID], onDelete: Cascade)
+  user            User      @relation(fields: [UserID], references: [UserID], onDelete: Cascade)
+
+  @@index([CategoryID], map: "sub_categories_CategoryID_fkey")
+  @@index([UserID], map: "sub_categories_UserID_fkey")
+  @@map("sub_categories")
+}
+
+model Expense {
+  ExpenseID      Int          @id @default(autoincrement())
+  ExpenseDate    DateTime
+  CategoryID     Int?
+  SubCategoryID  Int?
+  PeopleID       Int
+  ProjectID      Int?
+  Amount         Decimal      @db.Decimal(18, 2)
+  ExpenseDetail  String?      @db.VarChar(500)
+  AttachmentPath String?      @db.VarChar(250)
+  Description    String?      @db.VarChar(500)
+  UserID         Int
+  Created        DateTime?    @default(now())
+  Modified       DateTime?    @updatedAt
+  category       Category?    @relation(fields: [CategoryID], references: [CategoryID])
+  people         People       @relation(fields: [PeopleID], references: [PeopleID], onDelete: Cascade)
+  project        Project?     @relation(fields: [ProjectID], references: [ProjectID])
+  subCategory    SubCategory? @relation(fields: [SubCategoryID], references: [SubCategoryID])
+  user           User         @relation(fields: [UserID], references: [UserID], onDelete: Cascade)
+
+  @@index([CategoryID], map: "expenses_CategoryID_fkey")
+  @@index([PeopleID], map: "expenses_PeopleID_fkey")
+  @@index([ProjectID], map: "expenses_ProjectID_fkey")
+  @@index([SubCategoryID], map: "expenses_SubCategoryID_fkey")
+  @@index([UserID], map: "expenses_UserID_fkey")
+  @@map("expenses")
+}
+
+model Income {
+  IncomeID       Int          @id @default(autoincrement())
+  IncomeDate     DateTime
+  CategoryID     Int?
+  SubCategoryID  Int?
+  PeopleID       Int
+  ProjectID      Int?
+  Amount         Decimal      @db.Decimal(18, 2)
+  IncomeDetail   String?      @db.VarChar(500)
+  AttachmentPath String?      @db.VarChar(250)
+  Description    String?      @db.VarChar(500)
+  UserID         Int
+  Created        DateTime?    @default(now())
+  Modified       DateTime?    @updatedAt
+  category       Category?    @relation(fields: [CategoryID], references: [CategoryID])
+  people         People       @relation(fields: [PeopleID], references: [PeopleID], onDelete: Cascade)
+  project        Project?     @relation(fields: [ProjectID], references: [ProjectID])
+  subCategory    SubCategory? @relation(fields: [SubCategoryID], references: [SubCategoryID])
+  user           User         @relation(fields: [UserID], references: [UserID], onDelete: Cascade)
+
+  @@index([CategoryID], map: "incomes_CategoryID_fkey")
+  @@index([PeopleID], map: "incomes_PeopleID_fkey")
+  @@index([ProjectID], map: "incomes_ProjectID_fkey")
+  @@index([SubCategoryID], map: "incomes_SubCategoryID_fkey")
+  @@index([UserID], map: "incomes_UserID_fkey")
+  @@map("incomes")
+}
